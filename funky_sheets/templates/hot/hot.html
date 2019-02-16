@@ -1,0 +1,234 @@
+{% load funky_sheets_tags %}
+
+<form id="form_hot" method="post" action="" onsubmit="return constructFormset();">
+
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  {% if formset.errors %}{% endif %}
+
+  {% include errors_template %}
+
+  <div id="table_hot"></div>
+
+  <p>
+    <button type="submit" class="btn btn-primary" id="btn-submit">{{ button_text }}</button>
+  </p>
+
+</form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.20.3/handsontable.full.min.js"></script>
+
+<script type="text/javascript">
+
+  /* 1. Construct initial data from the formset */
+
+  var colHeaders = new Array();
+  var colTypes = new Array();
+  var fieldTypes = new Array();
+  var primaryKeys = new Array();
+  var data  = new Array();
+
+  // Iterate through the forms of the formset
+  {% for form in formset %}
+
+    var row  = new Array();
+
+    // Iterate through the fields of the form
+    {% for field in form %}
+
+      /* ManyToManyField */
+
+      // TODO: Change to switch & function as in constructFormField()?
+      {% if field|widget_type == "CheckboxSelectMultiple" %}
+
+        {% for choice in field.field.choices %}
+          // Only when iterating through the first form in formset
+          {% if forloop.parentloop.parentloop.counter == 1 %}
+            colTypes.push("checkbox"); // Add column type to the colTypes
+            colHeaders.push("{{ choice.1 }}"); // Add label to the colHeaders
+            // Extra values needed for construction of m2m checkboxes in constructFormField()
+            fieldTypes.push([ // Add field type to the fieldTypes
+              "{{ field.field.widget.input_type }} m2m",
+              "{{ field.label }}",
+              "{{ forloop.counter0 }}",
+              "{{ choice.0 }}"
+            ]);
+          {% endif %}
+
+          // field.value is a list of 'ids' of related objects in m2m field
+          // choice.0 is an 'id' of single related object
+            {% if choice.0 in field.value|int_list %}
+              row.push(true);
+            {% else %}
+              row.push(false);
+            {% endif %}
+        {% endfor %}
+
+      /* Other fields */
+
+      {% else %}
+
+        var value = "";
+        // TODO: Get value based on a field type?
+        {% if field.value %}
+          value = "{{ field.value }}";
+        {% endif %}
+
+        if ("{{ field.label }}" != "Id" && "{{ field.label }}" != "Delete"){
+          // Only when iterating through the first form in formset
+          {% if forloop.parentloop.counter == 1 %}
+            colTypes.push(""); // Add column type to the colTypes
+            colHeaders.push("{{ field.label }}"); // Add label to the colHeaders
+            fieldTypes.push([ // Add field type to the fieldTypes
+              "{{ field.field.widget.input_type }}"
+            ]);
+          {% endif %}
+          // Add value to the row
+          row.push(value);
+        } else if ("{{ field.label }}" == "Id") {
+          // TODO: Why?
+          // Add value to the primaryKeys
+          primaryKeys.push("{{ field.value }}");
+        };
+
+      {% endif %}
+
+    {% endfor %}
+    // Add row to the data
+    data.push(row);
+
+  {% endfor %}
+
+  /* 2. Construct & fill in formset fields */
+
+  var total_non_empty_rows = 0;
+
+  function constructFormset() {
+    // Get data from instantiated Handsontable
+    var tableData = hot.getData();
+
+    // Iterate through tableData
+    // Construct form from each row
+    for(var i = 0; i < tableData.length; i++) {
+      var row = tableData[i];
+      var pk = "";
+
+      // Get primary key
+      if (i < primaryKeys.length){
+        pk = primaryKeys[i]
+      }
+
+      // Add primary key value or empty string
+      {% if action == "update" %}
+        var input_id = "{{ formset.prefix }}-" + i + "-id";
+        $("#form_hot").append(
+          '<input id="id_' + input_id
+          + '" name="' + input_id
+          + '" type="hidden" value="' + pk +'" />'
+        );
+      {% endif %}
+
+      // Set empty rows for deletion
+      if (row.isNull()){
+        var input_id = "{{formset.prefix}}-" + i + "-DELETE";
+        $('#form_hot').append(
+          '<input id="id_' + input_id
+          + '" name="' + input_id
+          + '" type="hidden" value="on" />'
+        );
+      }
+      // Add fields to the form of a formset for each element of a row in tableData
+      else {
+        for(var j = 0; j < row.length; j++) {
+          constructFormField(i, j, fieldTypes[j], row);
+        }
+        total_non_empty_rows += 1;
+      }
+    }
+    // Set total number of forms
+    var input_id = "id_{{ formset.prefix }}-TOTAL_FORMS";
+    $('#' + input_id).val(total_non_empty_rows);
+
+    return true;
+  }
+
+  /* 3. Helper functions */
+
+  // Check if an array contains only empty strings
+  Array.prototype.isNull = function (){
+    return this.join().replace(/,/g,"").length === 0;
+  };
+
+  function constructFormField(i, j, fieldType, row) {
+    var partialName = colHeaders[j].toLowerCase().replace(/ /g,"_");
+    var fieldName = "{{ formset.prefix }}-" + i + "-" + partialName;
+    var fieldString = "";
+
+    var value = row[j];
+
+    if (value == null) {
+      value = "";
+    }
+
+    switch(fieldType[0]) {
+      case "select": // select field
+        fieldString = "<select id='id_" + fieldName
+                      + "' name='" + fieldName
+                      + "' style='visibility: hidden;'>"
+                      + "<option value='" + value +"' selected></option>"
+                      + "</select>";
+        break;
+      case "checkbox m2m": // checkbox m2m field
+        if (value == true) {
+          var fieldLabel, count = "";
+          var tablePrefix = "{{ formset.prefix }}-" + i + "-";
+          var fieldLabel = fieldType[1].toLowerCase().replace(/ /g,"_");
+          var count = fieldType[2];
+          value = fieldType[3];
+
+          fieldString = "<input id=id_'" + tablePrefix + fieldLabel + "_" + count
+                        + "' name='" + tablePrefix + fieldLabel
+                        + "' type='hidden' value='" + value + "' />";
+        }
+        break;
+      default: // text, number fields
+        fieldString = "<input id=id_'" + fieldName
+                      + "' name='" + fieldName
+                      + "' type='hidden' value='" + value + "' />";
+    }
+
+    return $('#form_hot').append(fieldString);
+  }
+
+  /* 4. Construct Handsontable */
+
+  var container = document.getElementById("table_hot");
+
+  var isCheckbox = function(item, index) {
+    return item == "checkbox" ? { type: "checkbox" } : {};
+  }
+
+  // console.log(colHeaders);
+  // console.log(colTypes);
+  // console.log(fieldTypes);
+
+  // Construct columns & cell types
+  // Add 'type: "checkbox"' if cells in column are checkboxes
+  var columns = colTypes.map(isCheckbox);
+
+  var hotSettings = {
+    data: data,
+    colHeaders: colHeaders,
+    columns: columns
+  };
+
+  // Construct hotSettings from dict passed in from HotView
+  {% for key, value in hot_settings.items %}
+    hotSettings.{{ key }} = {{ value }};
+  {% endfor %}
+
+  var hot = new Handsontable(container, hotSettings);
+
+</script>
