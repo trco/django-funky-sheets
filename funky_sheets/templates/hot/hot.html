@@ -11,6 +11,10 @@
 
   <div id="table_hot"></div>
 
+  {% for form in formset %}
+    {{ form.as_p }}
+  {% endfor %}
+
   <p>
     <button type="submit" class="btn btn-primary" id="btn-submit">{{ button_text }}</button>
   </p>
@@ -25,10 +29,14 @@
   /* 1. Construct initial data from the formset */
 
   var colHeaders = new Array();
-  var colTypes = new Array();
   var fieldTypes = new Array();
   var primaryKeys = new Array();
   var data  = new Array();
+
+  // Variables supporting "Django Select widget" / "Handsontable dropdown" logic are used here
+  var temp = [];
+  var choiceValues = [];
+  var choiceStrings = [];
 
   // Iterate through the forms of the formset
   {% for form in formset %}
@@ -46,11 +54,10 @@
         {% for choice in field.field.choices %}
           // Only when iterating through the first form in formset
           {% if forloop.parentloop.parentloop.counter == 1 %}
-            colTypes.push("checkbox"); // Add column type to the colTypes
             colHeaders.push("{{ choice.1 }}"); // Add label to the colHeaders
             // Extra values needed for construction of m2m checkboxes in constructFormField()
             fieldTypes.push([ // Add field type to the fieldTypes
-              "{{ field.field.widget.input_type }} m2m",
+              "m2m {{ field.field.widget.input_type }}",
               "{{ field.label }}",
               "{{ forloop.counter0 }}",
               "{{ choice.0 }}"
@@ -66,27 +73,63 @@
             {% endif %}
         {% endfor %}
 
+      // TODO: Add comments!
+      {% elif field|widget_type == "Select" %}
+
+        // Variables supporting "Django Select widget" / "Handsontable dropdown" logic are used here
+
+        {% if forloop.parentloop.counter == 1 %}
+          colHeaders.push("{{ field.label }}");
+          temp.push("{{ field.field.widget.input_type }}");
+
+          // Choices needed for construction of source for dropdown in cellWidget()
+          {% for choice in field.field.choices %}
+            choiceValues.push("{{ choice.0 }}");
+            choiceStrings.push("{{ choice.1 }}");
+          {% endfor %}
+
+          temp.push(choiceValues);
+          temp.push(choiceStrings);
+          fieldTypes.push(temp);
+        {% endif %}
+
+        {% if field.value %}
+          // Get index of selected choice in choiceValues
+          var index = choiceValues.indexOf("{{ field.value }}");
+          // Push string at index in choiceStrings to the row
+          row.push(choiceStrings[index]);
+          //row.push("{{ field.value }}");
+        {% else %}
+          row.push("");
+        {% endif %}
+
       /* Other fields */
 
       {% else %}
 
-        var value = "";
-        // TODO: Get value based on a field type?
-        {% if field.value %}
-          value = "{{ field.value }}";
-        {% endif %}
-
         if ("{{ field.label }}" != "Id" && "{{ field.label }}" != "Delete"){
           // Only when iterating through the first form in formset
           {% if forloop.parentloop.counter == 1 %}
-            colTypes.push(""); // Add column type to the colTypes
             colHeaders.push("{{ field.label }}"); // Add label to the colHeaders
             fieldTypes.push([ // Add field type to the fieldTypes
               "{{ field.field.widget.input_type }}"
             ]);
           {% endif %}
+
           // Add value to the row
-          row.push(value);
+          // Inputs without value
+          {% if not field.value %}
+            // Checkbox input
+            {% if field.field.widget.input_type == "checkbox" %}
+              row.push(false);
+            // Empty inputs
+            {% else %}
+              row.push("");
+            {% endif %}
+          // Inputs with value
+          {% else %}
+            row.push("{{ field.value }}");
+          {% endif %}
         } else if ("{{ field.label }}" == "Id") {
           // TODO: Why?
           // Add value to the primaryKeys
@@ -98,6 +141,8 @@
     {% endfor %}
     // Add row to the data
     data.push(row);
+
+    console.log(row);
 
   {% endfor %}
 
@@ -174,13 +219,19 @@
 
     switch(fieldType[0]) {
       case "select": // select field
+        // TODO: Add better comments!
+        // Get index of selected choice in choiceStrings
+        var index = fieldType[2].indexOf(value);
+        // Get value at index in choiceValues
+        value = fieldType[1][index];
+
         fieldString = "<select id='id_" + fieldName
                       + "' name='" + fieldName
                       + "' style='visibility: hidden;'>"
                       + "<option value='" + value +"' selected></option>"
                       + "</select>";
         break;
-      case "checkbox m2m": // checkbox m2m field
+      case "m2m checkbox": // m2m checkbox field
         if (value == true) {
           var fieldLabel, count = "";
           var tablePrefix = "{{ formset.prefix }}-" + i + "-";
@@ -193,7 +244,7 @@
                         + "' type='hidden' value='" + value + "' />";
         }
         break;
-      default: // text, number fields
+      default: // text, number, checkbox, url fields
         fieldString = "<input id=id_'" + fieldName
                       + "' name='" + fieldName
                       + "' type='hidden' value='" + value + "' />";
@@ -206,17 +257,22 @@
 
   var container = document.getElementById("table_hot");
 
-  var isCheckbox = function(item, index) {
-    return item == "checkbox" ? { type: "checkbox" } : {};
+  var cellWidget = function(item, index) {
+    if (item[0] == "checkbox" || item[0] == "m2m checkbox") {
+      return { type: "checkbox" };
+    } else if (item[0] == "select") {
+      return { type: "dropdown", source: item[2] };
+    } else {
+      return {};
+    }
   }
 
-  // console.log(colHeaders);
-  // console.log(colTypes);
-  // console.log(fieldTypes);
+  // Construct columns & cell types based on fieldTypes
+  var columns = fieldTypes.map(cellWidget);
 
-  // Construct columns & cell types
-  // Add 'type: "checkbox"' if cells in column are checkboxes
-  var columns = colTypes.map(isCheckbox);
+  // console.log(colHeaders);
+  // console.log(fieldTypes);
+  // console.log(columns);
 
   var hotSettings = {
     data: data,

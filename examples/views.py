@@ -1,4 +1,4 @@
-from django.forms import CheckboxSelectMultiple
+from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 
@@ -29,7 +29,8 @@ class CreateMovieView(HotView):
 
     factory_kwargs = {
         'widgets': {
-            'genre': CheckboxSelectMultiple()
+            'genre': CheckboxSelectMultiple(),
+            'parents_guide': CheckboxInput(),
         }
     }
 
@@ -63,7 +64,8 @@ class UpdateMovieView(HotView):
 
     factory_kwargs = {
         'widgets': {
-            'genre': CheckboxSelectMultiple()
+            'genre': CheckboxSelectMultiple(),
+            'parents_guide': CheckboxInput(),
         }
     }
 
