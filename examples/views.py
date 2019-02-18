@@ -16,7 +16,16 @@ class CreateMovieView(HotView):
     template_name = 'examples/create.html'
     prefix = 'table'
     success_url = reverse_lazy('update')
-    fields = ('id', 'title', 'genre', 'imdb_rating')
+    fields = (
+        'id',
+        'title',
+        'director',
+        'release_date',
+        'imdb_rating',
+        'genre',
+        'parents_guide',
+        'imdb_link'
+    )
 
     factory_kwargs = {
         'widgets': {
@@ -41,7 +50,16 @@ class UpdateMovieView(HotView):
     button_text = 'Update'
     prefix = 'table'
     success_url = reverse_lazy('update')
-    fields = ('id', 'title', 'genre', 'imdb_rating')
+    fields = (
+        'id',
+        'title',
+        'director',
+        'release_date',
+        'imdb_rating',
+        'genre',
+        'parents_guide',
+        'imdb_link'
+    )
 
     factory_kwargs = {
         'widgets': {
