@@ -26,14 +26,14 @@
 
 <script type="text/javascript">
 
-  /* 1. Construct initial data from the formset */
+  /* 1. Construct initial data for table from the formset */
 
   var colHeaders = new Array();
   var fieldTypes = new Array();
   var primaryKeys = new Array();
   var data  = new Array();
 
-  // Variables supporting "Django Select widget" / "Handsontable dropdown" logic are used here
+  // Variables supporting "Django Select widget" / "Handsontable dropdown" logic
   var temp = [];
   var choiceValues = [];
   var choiceStrings = [];
@@ -45,6 +45,7 @@
 
     // Iterate through the fields of the form
     {% for field in form %}
+
 
       /* ManyToManyField */
 
@@ -76,13 +77,11 @@
       // TODO: Add comments!
       {% elif field|widget_type == "Select" %}
 
-        // Variables supporting "Django Select widget" / "Handsontable dropdown" logic are used here
-
         {% if forloop.parentloop.counter == 1 %}
           colHeaders.push("{{ field.label }}");
           temp.push("{{ field.field.widget.input_type }}");
 
-          // Choices needed for construction of source for dropdown in cellWidget()
+          // Choices needed for construction of the source for dropdown in cellWidget()
           {% for choice in field.field.choices %}
             choiceValues.push("{{ choice.0 }}");
             choiceStrings.push("{{ choice.1 }}");
@@ -117,8 +116,16 @@
           {% endif %}
 
           // Add value to the row
-          // Inputs without value
-          {% if not field.value %}
+          // Inputs with value
+          {% if field.value %}
+            // Url inputs
+            {% if field.field.widget.input_type == "url" %}
+              row.push("<a href={{ field.value }} target='_blank'>{{ field.value }}</a>");
+            // Empty inputs
+            {% else %}
+              row.push("{{ field.value }}");
+            {% endif %}
+          {% else %}
             // Checkbox input
             {% if field.field.widget.input_type == "checkbox" %}
               row.push(false);
@@ -126,10 +133,8 @@
             {% else %}
               row.push("");
             {% endif %}
-          // Inputs with value
-          {% else %}
-            row.push("{{ field.value }}");
           {% endif %}
+
         } else if ("{{ field.label }}" == "Id") {
           // TODO: Why?
           // Add value to the primaryKeys
@@ -156,6 +161,7 @@
 
     // Iterate through tableData
     // Construct form from each row
+    // i=row number
     for(var i = 0; i < tableData.length; i++) {
       var row = tableData[i];
       var pk = "";
@@ -185,6 +191,7 @@
         );
       }
       // Add fields to the form of a formset for each element of a row in tableData
+      // i=row number, j=column number
       else {
         for(var j = 0; j < row.length; j++) {
           constructFormField(i, j, fieldTypes[j], row);
@@ -206,6 +213,7 @@
     return this.join().replace(/,/g,"").length === 0;
   };
 
+  // i=row number, j=column number
   function constructFormField(i, j, fieldType, row) {
     var partialName = colHeaders[j].toLowerCase().replace(/ /g,"_");
     var fieldName = "{{ formset.prefix }}-" + i + "-" + partialName;
@@ -253,15 +261,38 @@
     return $('#form_hot').append(fieldString);
   }
 
+  // Removes null from empty url inputs
+  function cleanHtmlRenderer(instance, td, row, col, prop, value, cellProperties){
+    Handsontable.renderers.HtmlRenderer.apply(this, arguments);
+    if (td.innerHTML === "null") {
+      td.innerHTML = "";
+    }
+  }
+  Handsontable.renderers.registerRenderer("cleanHtmlRenderer", cleanHtmlRenderer);
+
   /* 4. Construct Handsontable */
 
   var container = document.getElementById("table_hot");
 
   var cellWidget = function(item, index) {
     if (item[0] == "checkbox" || item[0] == "m2m checkbox") {
-      return { type: "checkbox" };
+      return {
+        type: "checkbox"
+      };
     } else if (item[0] == "select") {
-      return { type: "dropdown", source: item[2] };
+      return {
+        type: "dropdown",
+        source: item[2]
+      };
+    } else if (item[0] == "date") {
+      return {
+        type: "date",
+        dateFormat: "{{ date_format }}"
+      };
+    } else if (item[0] == "url") {
+      return {
+        renderer: "cleanHtmlRenderer"
+      };
     } else {
       return {};
     }
@@ -271,7 +302,8 @@
   var columns = fieldTypes.map(cellWidget);
 
   // console.log(colHeaders);
-  // console.log(fieldTypes);
+  console.log(fieldTypes);
+  console.log("{{ date_format }}");
   // console.log(columns);
 
   var hotSettings = {

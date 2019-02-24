@@ -5,6 +5,7 @@ class HotView(ModelFormSetView):
 
     action = 'create'
     button_text = 'Create'
+    date_format = 'YYYY-MM-DD'
     hot_template = 'hot/hot.html'
     errors_template = 'hot/errors.html'
     hot_settings = {}
@@ -34,17 +35,12 @@ class HotView(ModelFormSetView):
     def get_context_data(self, **kwargs):
         context = super(HotView, self).get_context_data(**kwargs)
 
-        action = self.action
-        button_text = self.button_text
-        hot_template = self.hot_template
-        errors_template = self.errors_template
-        hot_settings = self.hot_settings
-
-        context['action'] = action
-        context['button_text'] = button_text
-        context['hot_template'] = hot_template
-        context['errors_template'] = errors_template
-        context['hot_settings'] = hot_settings
+        context['action'] = self.action
+        context['button_text'] = self.button_text
+        context['date_format'] = self.date_format
+        context['hot_template'] = self.hot_template
+        context['errors_template'] = self.errors_template
+        context['hot_settings'] = self.hot_settings
 
         return context
 

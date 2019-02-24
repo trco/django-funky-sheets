@@ -1,4 +1,4 @@
-from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput, DateInput
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 
@@ -29,13 +29,14 @@ class CreateMovieView(HotView):
 
     factory_kwargs = {
         'widgets': {
+            'release_date': DateInput(attrs={'type': 'date'}),
             'genre': CheckboxSelectMultiple(),
             'parents_guide': CheckboxInput(),
         }
     }
 
     hot_settings = {
-        'columnSorting': 'true',
+        # 'columnSorting': 'true',
         'contextMenu': 'true',
         'autoWrapRow': 'true',
         'rowHeaders': 'true',
@@ -44,30 +45,10 @@ class CreateMovieView(HotView):
     }
 
 
-class UpdateMovieView(HotView):
-    model = Movie
+class UpdateMovieView(CreateMovieView):
     template_name = 'examples/update.html'
     action = 'update'
     button_text = 'Update'
-    prefix = 'table'
-    success_url = reverse_lazy('update')
-    fields = (
-        'id',
-        'title',
-        'director',
-        'release_date',
-        'imdb_rating',
-        'genre',
-        'parents_guide',
-        'imdb_link'
-    )
-
-    factory_kwargs = {
-        'widgets': {
-            'genre': CheckboxSelectMultiple(),
-            'parents_guide': CheckboxInput(),
-        }
-    }
 
     hot_settings = {
         # 'columnSorting': 'true',
