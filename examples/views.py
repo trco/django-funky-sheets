@@ -21,10 +21,10 @@ class CreateMovieView(HotView):
         'title',
         'director',
         'release_date',
+        'parents_guide',
         'imdb_rating',
         'genre',
-        'parents_guide',
-        'imdb_link'
+        'imdb_link',
     )
 
     factory_kwargs = {

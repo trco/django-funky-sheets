@@ -11,18 +11,14 @@
 
   <div id="table_hot"></div>
 
-  {% for form in formset %}
-    {{ form.as_p }}
-  {% endfor %}
-
   <p>
     <button type="submit" class="btn btn-primary" id="btn-submit">{{ button_text }}</button>
   </p>
 
 </form>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.20.3/handsontable.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/3.0.0/handsontable.full.min.js"></script>
 
 <script type="text/javascript">
 
@@ -46,8 +42,7 @@
     // Iterate through the fields of the form
     {% for field in form %}
 
-
-      /* ManyToManyField */
+      /* CheckboxSelectMultiple widget support for ManyToManyField */
 
       // TODO: Change to switch & function as in constructFormField()?
       {% if field|widget_type == "CheckboxSelectMultiple" %}
@@ -67,14 +62,17 @@
 
           // field.value is a list of 'ids' of related objects in m2m field
           // choice.0 is an 'id' of single related object
-            {% if choice.0 in field.value|int_list %}
-              row.push(true);
-            {% else %}
-              row.push(false);
-            {% endif %}
+          {% if choice.0 in field.value|int_list %}
+            row.push(true);
+          {% else %}
+            row.push(false);
+          {% endif %}
+
         {% endfor %}
 
-      // TODO: Add comments!
+      /* Select widget */
+
+      // TODO: Add comments
       {% elif field|widget_type == "Select" %}
 
         {% if forloop.parentloop.counter == 1 %}
@@ -97,16 +95,16 @@
           var index = choiceValues.indexOf("{{ field.value }}");
           // Push string at index in choiceStrings to the row
           row.push(choiceStrings[index]);
-          //row.push("{{ field.value }}");
         {% else %}
           row.push("");
         {% endif %}
 
-      /* Other fields */
+      /* Other widgets: TextInput, NumberInput, URLInput, DateInput, CheckboxInput */
 
       {% else %}
 
         if ("{{ field.label }}" != "Id" && "{{ field.label }}" != "Delete"){
+
           // Only when iterating through the first form in formset
           {% if forloop.parentloop.counter == 1 %}
             colHeaders.push("{{ field.label }}"); // Add label to the colHeaders
@@ -116,23 +114,29 @@
           {% endif %}
 
           // Add value to the row
-          // Inputs with value
+
+          // Input with value
           {% if field.value %}
-            // Url inputs
+
+            // URLInput
             {% if field.field.widget.input_type == "url" %}
               row.push("<a href={{ field.value }} target='_blank'>{{ field.value }}</a>");
-            // Empty inputs
+            // Other widgets
             {% else %}
               row.push("{{ field.value }}");
             {% endif %}
+
+          // Inputs without value
           {% else %}
-            // Checkbox input
+
+            // CheckboxInput
             {% if field.field.widget.input_type == "checkbox" %}
               row.push(false);
-            // Empty inputs
+            // Other widgets
             {% else %}
               row.push("");
             {% endif %}
+
           {% endif %}
 
         } else if ("{{ field.label }}" == "Id") {
@@ -144,10 +148,12 @@
       {% endif %}
 
     {% endfor %}
+
     // Add row to the data
     data.push(row);
 
-    console.log(row);
+    // Debug logs
+    // console.log(row);
 
   {% endfor %}
 
@@ -160,8 +166,7 @@
     var tableData = hot.getData();
 
     // Iterate through tableData
-    // Construct form from each row
-    // i=row number
+    // Construct form from each row (i=row number)
     for(var i = 0; i < tableData.length; i++) {
       var row = tableData[i];
       var pk = "";
@@ -191,7 +196,7 @@
         );
       }
       // Add fields to the form of a formset for each element of a row in tableData
-      // i=row number, j=column number
+      // (i=row number, j=column number)
       else {
         for(var j = 0; j < row.length; j++) {
           constructFormField(i, j, fieldTypes[j], row);
@@ -208,12 +213,12 @@
 
   /* 3. Helper functions */
 
-  // Check if an array contains only empty strings
+  // 3.1. Check if an array contains only empty strings
   Array.prototype.isNull = function (){
     return this.join().replace(/,/g,"").length === 0;
   };
 
-  // i=row number, j=column number
+  // 3.2. Construct form field (i=row number, j=column number)
   function constructFormField(i, j, fieldType, row) {
     var partialName = colHeaders[j].toLowerCase().replace(/ /g,"_");
     var fieldName = "{{ formset.prefix }}-" + i + "-" + partialName;
@@ -227,7 +232,7 @@
 
     switch(fieldType[0]) {
       case "select": // select field
-        // TODO: Add better comments!
+        // TODO: Add comments
         // Get index of selected choice in choiceStrings
         var index = fieldType[2].indexOf(value);
         // Get value at index in choiceValues
@@ -252,7 +257,17 @@
                         + "' type='hidden' value='" + value + "' />";
         }
         break;
-      default: // text, number, checkbox, url fields
+      case "url": // url field
+        if (value.indexOf("href=") != -1) {
+          value = $("<div>").append(value).find("a").attr("href");
+        }
+
+        fieldString = "<input id=id_'" + fieldName
+                      + "' name='" + fieldName
+                      + "' type='hidden' value='" + value + "' />";
+
+        break;
+      default: // text, number, checkbox fields
         fieldString = "<input id=id_'" + fieldName
                       + "' name='" + fieldName
                       + "' type='hidden' value='" + value + "' />";
@@ -261,7 +276,7 @@
     return $('#form_hot').append(fieldString);
   }
 
-  // Removes null from empty url inputs
+  // 3.3. Custom Handsontable HtmlRendered, which removes null from empty url inputs
   function cleanHtmlRenderer(instance, td, row, col, prop, value, cellProperties){
     Handsontable.renderers.HtmlRenderer.apply(this, arguments);
     if (td.innerHTML === "null") {
@@ -270,10 +285,7 @@
   }
   Handsontable.renderers.registerRenderer("cleanHtmlRenderer", cleanHtmlRenderer);
 
-  /* 4. Construct Handsontable */
-
-  var container = document.getElementById("table_hot");
-
+  // 3.4. Construct Handsontable columns based on fieldTypes
   var cellWidget = function(item, index) {
     if (item[0] == "checkbox" || item[0] == "m2m checkbox") {
       return {
@@ -298,25 +310,32 @@
     }
   }
 
+  /* 4. Construct Handsontable */
+
+  var container = document.getElementById("table_hot");
   // Construct columns & cell types based on fieldTypes
   var columns = fieldTypes.map(cellWidget);
 
+  // Debug logs
   // console.log(colHeaders);
-  console.log(fieldTypes);
-  console.log("{{ date_format }}");
+  // console.log(fieldTypes);
+  // console.log("{{ date_format }}");
   // console.log(columns);
 
+  // Default hotSettings
   var hotSettings = {
     data: data,
     colHeaders: colHeaders,
     columns: columns
   };
 
-  // Construct hotSettings from dict passed in from HotView
+  // Add extra hotSettings from hot_settings dict passed in from HotView
   {% for key, value in hot_settings.items %}
     hotSettings.{{ key }} = {{ value }};
   {% endfor %}
 
   var hot = new Handsontable(container, hotSettings);
+
+  $("#HandsontableCopyPaste").css("visibility", "hidden");
 
 </script>

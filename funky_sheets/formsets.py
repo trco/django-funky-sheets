@@ -6,10 +6,11 @@ class HotView(ModelFormSetView):
     action = 'create'
     button_text = 'Create'
     date_format = 'YYYY-MM-DD'
-    hot_template = 'hot/hot.html'
     errors_template = 'hot/errors.html'
+    hot_template = 'hot/hot.html'
     hot_settings = {}
 
+    # Add one minSpareRow for create action
     def get(self, request, *args, **kwargs):
         if self.action == 'create':
             self.hot_settings['minSpareRows'] = 1
