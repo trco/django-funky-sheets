@@ -18,7 +18,7 @@
 </form>
 
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/3.0.0/handsontable.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/7.0.0/handsontable.full.min.js"></script>
 
 <script type="text/javascript">
 
@@ -168,7 +168,8 @@
     // Iterate through tableData
     // Construct form from each row (i=row number)
     for(var i = 0; i < tableData.length; i++) {
-      var row = tableData[i];
+      var rowTemp = tableData[i];
+      var row = rowTemp.map(setBooleansArray);
       var pk = "";
 
       // Get primary key
@@ -310,6 +311,28 @@
     }
   }
 
+  // 3.5. Change string 'true' or 'false' to js booleans
+
+  // On paste from clipboard
+  var setBooleansArray = function(item, index) {
+    if (item == 'true') {
+      return true;
+    } else if (item == 'false') {
+      return false;
+    } else {
+      return item;
+    }
+  }
+
+  // On getting hotSettings passed in from HotView
+  var setBooleansObject = function(obj) {
+    for (var key in obj) {
+      if (obj[key] == "true") {
+        obj[key] = true;
+      }
+    }
+  }
+
   /* 4. Construct Handsontable */
 
   var container = document.getElementById("table_hot");
@@ -329,10 +352,12 @@
     columns: columns
   };
 
-  // Add extra hotSettings from hot_settings dict passed in from HotView
-  {% for key, value in hot_settings.items %}
-    hotSettings.{{ key }} = {{ value }};
-  {% endfor %}
+  // Get hotSettings passed in from HotView
+  var extraHotSettings = {{ hot_settings|safe }};
+  setBooleansObject(extraHotSettings);
+
+  // Extend hotSettings with extraHotSettings
+  var hotSettings = $.extend(hotSettings, extraHotSettings);
 
   var hot = new Handsontable(container, hotSettings);
 
