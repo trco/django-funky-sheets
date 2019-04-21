@@ -4,6 +4,13 @@ Django Funky Sheets
 
 Django implementation of Handsontable spreadsheets for CRUD actions.
 
+Live Demo
+=========
+
+Demo_
+
+.. _Demo: https://trco.si/dfs/create/
+
 Installation
 ============
 
