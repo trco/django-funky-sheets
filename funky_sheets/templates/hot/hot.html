@@ -88,6 +88,12 @@
           temp.push(choiceValues);
           temp.push(choiceStrings);
           fieldTypes.push(temp);
+
+          // Empty arrays for next select field
+          choiceValues = [];
+          choiceStrings = [];
+          temp = [];
+
         {% endif %}
 
         {% if field.value %}
