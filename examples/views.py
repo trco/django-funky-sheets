@@ -15,6 +15,8 @@ class CreateMovieView(HotView):
     model = Movie
     template_name = 'examples/create.html'
     prefix = 'table'
+    checkbox_checked = 'yes'
+    checkbox_unchecked = 'no'
     success_url = reverse_lazy('update')
     fields = (
         'id',

@@ -63,9 +63,9 @@
           // field.value is a list of 'ids' of related objects in m2m field
           // choice.0 is an 'id' of single related object
           {% if choice.0 in field.value|int_list %}
-            row.push(true);
+            row.push("{{ checkbox_checked }}");
           {% else %}
-            row.push(false);
+            row.push("{{ checkbox_unchecked }}");
           {% endif %}
 
         {% endfor %}
@@ -88,11 +88,6 @@
           temp.push(choiceValues);
           temp.push(choiceStrings);
           fieldTypes.push(temp);
-
-          // Empty arrays for next select field
-          choiceValues = [];
-          choiceStrings = [];
-          temp = [];
 
         {% endif %}
 
@@ -127,6 +122,9 @@
             // URLInput
             {% if field.field.widget.input_type == "url" %}
               row.push("<a href={{ field.value }} target='_blank'>{{ field.value }}</a>");
+            // CheckboxInput
+            {% elif field.field.widget.input_type == "checkbox" %}
+              row.push("{{ checkbox_checked }}");
             // Other widgets
             {% else %}
               row.push("{{ field.value }}");
@@ -137,7 +135,7 @@
 
             // CheckboxInput
             {% if field.field.widget.input_type == "checkbox" %}
-              row.push(false);
+              row.push("{{ checkbox_unchecked }}");
             // Other widgets
             {% else %}
               row.push("");
@@ -296,7 +294,9 @@
   var cellWidget = function(item, index) {
     if (item[0] == "checkbox" || item[0] == "m2m checkbox") {
       return {
-        type: "checkbox"
+        type: "checkbox",
+        checkedTemplate: "{{ checkbox_checked }}",
+        uncheckedTemplate: "{{ checkbox_unchecked }}",
       };
     } else if (item[0] == "select") {
       return {
@@ -321,9 +321,9 @@
 
   // On paste from clipboard
   var setBooleansArray = function(item, index) {
-    if (item == 'true') {
+    if (item == "{{ checkbox_checked }}") {
       return true;
-    } else if (item == 'false') {
+    } else if (item == "{{ checkbox_unchecked }}") {
       return false;
     } else {
       return item;
@@ -335,6 +335,8 @@
     for (var key in obj) {
       if (obj[key] == "true") {
         obj[key] = true;
+      } else if (obj[key] == "false") {
+        obj[key] = false;
       }
     }
   }
