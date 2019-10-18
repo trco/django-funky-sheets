@@ -31,8 +31,6 @@
 
   // Variables supporting "Django Select widget" / "Handsontable dropdown" logic
   var temp = [];
-  var choiceValues = [];
-  var choiceStrings = [];
 
   // Iterate through the forms of the formset
   {% for form in formset %}
@@ -75,21 +73,33 @@
       // TODO: Add comments
       {% elif field|widget_type == "Select" %}
 
+        var choiceValues = [];
+        var choiceStrings = [];
+
+        var cellWidgetChoiceValues = [];
+        var cellWidgetChoiceStrings = [];
+
         {% if forloop.parentloop.counter == 1 %}
           colHeaders.push("{{ field.label }}");
-          temp.push("{{ field.field.widget.input_type }}");
 
-          // Choices needed for construction of the source for dropdown in cellWidget()
+          if (temp.length === 0) {
+            temp.push("{{ field.field.widget.input_type }}");
+          }
+
           {% for choice in field.field.choices %}
-            choiceValues.push("{{ choice.0 }}");
-            choiceStrings.push("{{ choice.1 }}");
+            cellWidgetChoiceValues.push("{{ choice.0 }}");
+            cellWidgetChoiceStrings.push("{{ choice.1 }}");
           {% endfor %}
 
-          temp.push(choiceValues);
-          temp.push(choiceStrings);
+          temp.push([cellWidgetChoiceValues, cellWidgetChoiceStrings]);
           fieldTypes.push(temp);
 
         {% endif %}
+
+        {% for choice in field.field.choices %}
+          choiceValues.push("{{ choice.0 }}");
+          choiceStrings.push("{{ choice.1 }}");
+        {% endfor %}
 
         {% if field.value %}
           // Get index of selected choice in choiceValues
@@ -239,9 +249,9 @@
       case "select": // select field
         // TODO: Add comments
         // Get index of selected choice in choiceStrings
-        var index = fieldType[2].indexOf(value);
+        var index = fieldType[j][1].indexOf(value);
         // Get value at index in choiceValues
-        value = fieldType[1][index];
+        value = fieldType[j][0][index];
 
         fieldString = "<select id='id_" + fieldName
                       + "' name='" + fieldName
@@ -301,7 +311,7 @@
     } else if (item[0] == "select") {
       return {
         type: "dropdown",
-        source: item[2]
+        source: item[index][1]
       };
     } else if (item[0] == "date") {
       return {

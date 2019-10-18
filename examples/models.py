@@ -15,6 +15,16 @@ class Director(models.Model):
         return self.name
 
 
+class Country(models.Model):
+    name = models.CharField(max_length=64, null=True)
+
+    class Meta:
+        verbose_name_plural = 'countries'
+
+    def __str__(self):
+        return self.name
+
+
 class Movie(models.Model):
     # String fields
     title = models.CharField(max_length=64, null=True)
@@ -27,6 +37,7 @@ class Movie(models.Model):
     release_date = models.DateField(null=True)
     # Relationship fields
     director = models.ForeignKey(Director, null=True, on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, null=True, on_delete=models.CASCADE)
     genre = models.ManyToManyField(Genre)
 
     def __str__(self):
