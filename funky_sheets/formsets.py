@@ -6,6 +6,8 @@ class HotView(ModelFormSetView):
     action = 'create'
     button_text = 'Create'
     date_format = 'YYYY-MM-DD'
+    checkbox_checked = 'true'
+    checkbox_unchecked = 'false'
     errors_template = 'hot/errors.html'
     hot_template = 'hot/hot.html'
     hot_settings = {}
@@ -39,6 +41,8 @@ class HotView(ModelFormSetView):
         context['action'] = self.action
         context['button_text'] = self.button_text
         context['date_format'] = self.date_format
+        context['checkbox_checked'] = self.checkbox_checked
+        context['checkbox_unchecked'] = self.checkbox_unchecked
         context['hot_template'] = self.hot_template
         context['errors_template'] = self.errors_template
         context['hot_settings'] = self.hot_settings

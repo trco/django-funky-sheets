@@ -20,6 +20,7 @@ class CreateMovieView(HotView):
         'id',
         'title',
         'director',
+        'country',
         'release_date',
         'parents_guide',
         'imdb_rating',

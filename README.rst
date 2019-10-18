@@ -70,6 +70,9 @@ Define Create and Update views which inherit from ``HotView`` and render the Han
       model = Movie
       # Define template
       template_name = 'examples/create.html'
+      # Define custom characters/strings for checked/unchecked checkboxes
+      checkbox_checked = 'yes' # default: true
+      checkbox_unchecked = 'no' # default: false
       # Define prefix for the formset which is constructed from Handsontable spreadsheet on submission
       prefix = 'table'
       # Define success URL
