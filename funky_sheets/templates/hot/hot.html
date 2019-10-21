@@ -1,4 +1,7 @@
+{% load static %}
 {% load funky_sheets_tags %}
+
+<link href="{% static 'css/handsontable.full.min.css' %}" rel="stylesheet">
 
 <form id="form_hot" method="post" action="" onsubmit="return constructFormset();">
 
@@ -17,8 +20,8 @@
 
 </form>
 
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/7.0.0/handsontable.full.min.js"></script>
+<script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+<script src="{% static 'js/handsontable.full.min.js' %}"></script>
 
 <script type="text/javascript">
 
