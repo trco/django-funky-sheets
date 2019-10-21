@@ -128,8 +128,9 @@ Define Create and Update views which inherit from ``HotView`` and render the Han
 Template
 --------
 
-``hot_template`` uses ``jQuery 3.3.1`` and ``Handsontable 7.0.0.``.
-If you would like to use different versions of ``jQuery`` and ``Handsontable`` you should create your own ``hot_template`` by copying default ``hot_template`` (https://github.com/trco/django-funky-sheets/blob/master/funky_sheets/templates/hot/hot.html) and loading selected versions of ``jQuery``, ``Handsontable JavaScript and CSS``. Note that the compatibility with different versions is not guaranteed. 
+``hot_template`` uses ``jQuery 3.3.1`` and ``Handsontable 7.0.0.``
+
+If you would like to use different versions of ``jQuery`` and ``Handsontable`` you should create your own ``hot_template`` by copying default ``hot_template`` in funky_sheets/templates/hot/hot.html and loading selected versions of ``jQuery``, ``Handsontable JavaScript and CSS``. Note that the compatibility with different versions is not guaranteed. You should than include your custom ``hot_template`` when creating templates like ``create.html`` and ``update.html`` in the examples.
 
 Define templates which include ``hot_template`` in place where you want to render Handsontable spreadsheet.
 
