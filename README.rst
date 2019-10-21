@@ -102,7 +102,20 @@ Define Create and Update views which inherit from ``HotView`` and render the Han
           'autoWrapRow': 'true',
           'rowHeaders': 'true',
           'contextMenu': 'true',
-          'search': 'true'
+          'search': 'true',
+          # When value is dictionary don't wrap it in quotes
+          'headerTooltips': {
+              'rows': 'false',
+              'columns': 'true'
+          },
+          # When value is list don't wrap it in quotes
+          'dropdownMenu': [
+              'remove_col',
+              '---------',
+              'make_read_only',
+              '---------',
+              'alignment'
+          ]
       }
 
   class UpdateMovieView(CreateMovieView):
