@@ -2,6 +2,12 @@
 Changelog
 =========
 
+0.2.0 (2019-10-21)
+=================
+
+- add support for copy/pasting of custom strings for unchecked/checked checkbox
+- fix support for multiple dropdowns
+
 0.1.3 (2019-05-28)
 ================
 
