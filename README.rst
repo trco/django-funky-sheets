@@ -9,7 +9,7 @@ Live Demo
 
 Demo_
 
-.. _Demo: https://trco.si/dfs/create/
+.. _Demo: http://trco.silkym.com/dfs/create/
 
 Installation
 ============
