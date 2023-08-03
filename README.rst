@@ -156,7 +156,7 @@ General information
 
 Opening an issue
 ----------------
-When reporting an issue for ``django-bootstrap-modal-forms`` package, please prepare a publicly available repository having the issue you are reporting. The clear reproduce is the optimal way towards resolution.
+When reporting an issue for ``django-funky-sheets`` package, please prepare a publicly available repository having the issue you are reporting. The clear reproduce is the optimal way towards resolution.
 
 Contribute
 ----------
