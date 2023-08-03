@@ -4,12 +4,15 @@ Django Funky Sheets
 
 Django implementation of Handsontable spreadsheets for CRUD actions.
 
-Live Demo
-=========
+.. contents:: **Table of Contents**
+   :depth: 2
+   :local:
+   :backlinks: none
 
-Demo_
+Test and experiment on your machine
+===================================
 
-.. _Demo: http://trco.silkym.com/dfs/create/
+``Dockerfile`` and ``docker-compose.yml`` files that will enable you to easily setup and start  django-funky-sheets on your machine are coming soon.
 
 Installation
 ============
@@ -147,6 +150,13 @@ Define templates which include ``hot_template`` in place where you want to rende
   ...
   {% include hot_template %}
   ...
+
+General information
+===================
+
+Opening an issue
+****************
+When reporting an issue for ``django-bootstrap-modal-forms`` package, please prepare a publicly available repository having the issue you are reporting. The clear reproduce is the optimal way towards resolution.
 
 Contribute
 ==========
